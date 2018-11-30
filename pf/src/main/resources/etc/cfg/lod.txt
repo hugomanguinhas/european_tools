@@ -1,0 +1,14 @@
+http://www.mimo-db.eu/
+http://vocab.getty.edu/
+http://viaf.org/viaf/
+http://sws.geonames.org/
+http://iconclass.org/
+http://d-nb.info/gnd
+http://www.imj.org.il/imagine/thesaurus/objects/
+http://partage.vocnet.org/
+http://data.europeana.eu/concept/loc
+http://data.europeana.eu/concept/soundgenres/
+http://www.eagle-network.eu/voc/
+http://purl.org/dismarc/ns/
+http://udcdata.info/rdf/
+http://vocabularies.unesco.org/thesaurus/
