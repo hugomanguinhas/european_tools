@@ -23,7 +23,7 @@ import static eu.europeana.pf2.metadata.MetadataTierConstants.*;
  */
 public class EnablingElementsClassifier implements TierClassifierAlgorithm
 {
-    public String getLabel() { return "enabling"; }
+    public String getLabel() { return MetadataDimension.ENABLING.getID(); }
 
     public int getLevels() { return 3; }
 

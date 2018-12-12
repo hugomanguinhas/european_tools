@@ -23,8 +23,11 @@ import static eu.europeana.pf2.metadata.MetadataTierConstants.*;
 /**
  * @author Hugo Manguinhas <hugo.manguinhas@europeana.eu>
  * @since 18 Apr 2018
+ * 
+ * Second version of the measurement for the contextual classes criteria 
+ * softening some minimal requirements
  */
-public class ContextualClassClassifier implements TierClassifierAlgorithm
+public class ContextualClassClassifier2 implements TierClassifierAlgorithm
 {
     public String getLabel() { return MetadataDimension.CONTEXTUAL.getID(); }
 
@@ -75,6 +78,11 @@ public class ContextualClassClassifier implements TierClassifierAlgorithm
         return false;
     }
 
+    /*
+     * added rdagr2:professionOrOccupation, rdagr2:placeOfBirth, 
+     * rdagr2:placeOfDeath and lifted the constraint for the existence of 
+     * date of birth and death at the same time
+     */
     private boolean classifyAgent(Resource r)
     {
         boolean hasLabel = r.hasProperty(SKOS.prefLabel);
@@ -82,7 +90,10 @@ public class ContextualClassClassifier implements TierClassifierAlgorithm
                         || r.hasProperty(RDAGR2.dateOfBirth);
         boolean hasEnd   = r.hasProperty(EDM.end)
                         || r.hasProperty(RDAGR2.dateOfDeath);
-        return ( hasLabel && (hasBegin && hasEnd) );
+        boolean prof     = r.hasProperty(RDAGR2.professionOrOccupation);
+        boolean pBirth   = r.hasProperty(RDAGR2.placeOfBirth);
+        boolean pDeath   = r.hasProperty(RDAGR2.placeOfDeath);
+        return ( hasLabel && (hasBegin || hasEnd || prof || pBirth || pDeath) );
     }
 
     private boolean classifyPlace(Resource r)
@@ -100,14 +111,16 @@ public class ContextualClassClassifier implements TierClassifierAlgorithm
         return ( hasBegin && hasEnd );
     }
 
+    //added skos:note, however other match properties are missing!!!
     private boolean classifyConcept(Resource r)
     {
         boolean hasLabel    = r.hasProperty(SKOS.prefLabel);
+        boolean hasNote     = r.hasProperty(SKOS.note);
         boolean hasRelation = r.hasProperty(SKOS.broader)
                            || r.hasProperty(SKOS.narrower)
                            || r.hasProperty(SKOS.exactMatch)
                            || r.hasProperty(SKOS.closeMatch)
                            || r.hasProperty(SKOS.related);
-        return ( hasLabel && hasRelation );
+        return ( hasLabel && ( hasRelation || hasNote ));
     }
 }

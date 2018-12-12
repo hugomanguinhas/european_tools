@@ -34,66 +34,6 @@ import eu.europeana.ld.edm.RDAGR2;
  */
 public class MetadataTierConstants
 {
-    public static List<Property> RELEVANT_LANGUAGE_PROPERTIES
-        = Arrays.asList(
-            DC.contributor,
-            DC.coverage,
-            DC.creator,
-            DC.date,
-            DC.description,
-            DC.format,
-            DC.publisher,
-            DC.relation,
-            DC.rights,
-            DC.source,
-            DC.subject,
-            DC.title,
-            DC.type,
-            DCTerms.alternative,
-            DCTerms.conformsTo,
-            DCTerms.created,
-            DCTerms.extent,
-            DCTerms.hasFormat,
-            DCTerms.hasPart,
-            DCTerms.hasVersion,
-            DCTerms.isFormatOf,
-            DCTerms.isPartOf,
-            DCTerms.isReferencedBy,
-            DCTerms.isReplacedBy,
-            DCTerms.isRequiredBy,
-            DCTerms.issued,
-            DCTerms.isVersionOf,
-            DCTerms.medium,
-            DCTerms.provenance,
-            DCTerms.references,
-            DCTerms.replaces,
-            DCTerms.requires,
-            DCTerms.spatial,
-            DCTerms.tableOfContents,
-            DCTerms.temporal,
-            EDM.hasType,
-            EDM.isRelatedTo,
-            EDM.dataProvider,
-            EDM.provider,
-            DC.rights,
-            EDM.intermediateProvider,
-            SKOS.prefLabel,
-            SKOS.altLabel,
-            SKOS.note,
-            EDM.begin,
-            EDM.end,
-            FOAF.name,
-            RDAGR2.biographicalInformation,
-            RDAGR2.dateOfBirth,
-            RDAGR2.dateOfDeath,
-            RDAGR2.dateOfEstablishment,
-            RDAGR2.dateOfTermination,
-            RDAGR2.gender,
-            RDAGR2.placeOfBirth,
-            RDAGR2.placeOfDeath,
-            RDAGR2.professionOrOccupation
-    );
-
 //    public static List<String> LOD_VOCABULARIES = loadLODs();
 
     public static List<Group> GROUPS = Arrays.asList(
@@ -161,12 +101,6 @@ public class MetadataTierConstants
     public static boolean isEuropeanaAggregation(Resource r)
     {
         return r.hasProperty(RDF.type, EDM.EuropeanaAggregation);
-    }
-
-    public static boolean isRelevantProperty(Statement s)
-    {
-        return ( RELEVANT_LANGUAGE_PROPERTIES.contains(s.getPredicate()) 
-              && s.getObject().isLiteral() );
     }
 
     public static boolean isEnrichment(Resource r)

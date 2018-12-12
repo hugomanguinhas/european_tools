@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,18 +22,22 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 
 import eu.europeana.pf2.db.TierEntryConstants;
+import eu.europeana.pf2.metadata.MetadataDimension;
+import eu.europeana.pf2.metadata.MetadataTier;
 import static eu.europeana.pf2.alg.AlgorithmUtils.*;
 
 /**
  * @author Hugo Manguinhas <hugo.manguinhas@europeana.eu>
  * @since 2 Jun 2018
  */
-public class TierReportGenerator implements TierEntryConstants
+public class TierReportGenerator extends TierAnalysisGenerator 
+                                 implements TierEntryConstants
 {
     private MongoCollection<Document> _col;
     private NumberFormat FORMAT = new DecimalFormat("00.00%");
@@ -46,94 +51,120 @@ public class TierReportGenerator implements TierEntryConstants
 
     /***************************************************************************
      * Public Methods
-     * @throws IOException 
      **************************************************************************/
 
-    public void generateForAll(CSVPrinter p) throws IOException
+    public void genForAllDatasets(CSVPrinter p) throws IOException
     {
-        generateForSearch(p, new BasicDBObject());
+        genByCategory(p, "ds", "Dataset");
     }
 
-    public void generateForAllDatasets(CSVPrinter p, Collection<String> dss) throws IOException
+    public void genForAllProviders(CSVPrinter p) throws IOException
     {
-        for ( String ds : dss )
-        {
-            genSubCategory(p, createDatasetCriteria(ds), ds, 1);
-        }
+        genByCategory(p, "provider", "Aggregator");
     }
+
+    public void genForAllDataProviders(CSVPrinter p) throws IOException
+    {
+        genByCategory(p, "dataProvider", "Data Provider");
+    }
+
+    public void genForAllCountries(CSVPrinter p) throws IOException
+    {
+        genByCategory(p, "country", "Country");
+    }
+
+    public void genForAllEDMTypes(CSVPrinter p) throws IOException
+    {
+        genByCategory(p, "type", "EDM Type");
+    }
+
 
     public void generateForDataset(CSVPrinter p, String ds) throws IOException
     {
         generateForSearch(p, createDatasetCriteria(ds));
     }
 
-    public void generateForAllProviders(CSVPrinter p) throws IOException
+    public void generateForProvider(CSVPrinter p, String provider) throws IOException
     {
-        MongoCursor<String> c = _col.distinct("provider", String.class).iterator();
+//        generateForSearch(p, );
+    }
+
+    public void generateForAll(CSVPrinter p) throws IOException
+    {
+        generateForSearch(p, new BasicDBObject());
+    }
+
+    public void generateForSearch(CSVPrinter p, BasicDBObject filter) throws IOException
+    {
+        printHead(p);
+        long total = getCount(filter);
+        for ( int i = 0; i <= METADATA_TIER_MAX; i++)
+        {
+            p.print(METADATA_TIER.get(i));
+            for ( MetadataDimension d : MetadataDimension.values() )
+            {
+                printResult(p, getCount(filter, d.getID(), i), total);
+            }
+            p.println();
+        }
+    }
+
+
+    /***************************************************************************
+     * Protected Methods
+     **************************************************************************/
+
+    @Override
+    protected MongoCollection<Document> getCollection() { return _col; }
+
+
+    /***************************************************************************
+     * Private Methods
+     **************************************************************************/
+
+    private void genByCategory(CSVPrinter p, String prop, String label) throws IOException
+    {
+        MongoCursor<String> c = _col.distinct(prop, String.class)
+                                    .batchSize(BATCH_SIZE).iterator();
         try
         {
+            BasicDBObject filter = new BasicDBObject();
+
+            printHead(p, label);
             while (c.hasNext())
             {
-                String provider = c.next();
-                p.printRecord(provider);
-                generateForProvider(p, provider);
+                String value = c.next();
+                filter.put(prop, value);
+                p.print(value);
+                printTreeRow(p, filter);
                 p.println();
             }
         }
         finally { c.close(); }
     }
 
-    public void generateForProvider(CSVPrinter p, String provider) throws IOException
-    {
-        generateForSearch(p, new BasicDBObject("provider", provider));
-    }
-
-    public void generateForSearch(CSVPrinter p, BasicDBObject filter) throws IOException
-    {
-        printHead(p);
-        long total = getCount(filter);        
-        for ( int i = 0; i <= METADATA_TIER_MAX; i++)
-        {
-            p.print(METADATA_TIER.get(i));
-            for ( String d : METADATA_DIMENSIONS )
-            { 
-                printResult(p, getCount(filter, d, i), total);
-            }
-            p.println();
-        }
-    }
-
-    
-    /***************************************************************************
-     * Private Methods
-     **************************************************************************/
-
-    private void genSubCategory(CSVPrinter p, BasicDBObject filter
-                              , String category, int ident) throws IOException
+    @Override
+    protected void printTreeRow(CSVPrinter p, BasicDBObject filter) 
+              throws IOException
     {
         long total = getCount(filter);
-        for ( int i = 0; i <= METADATA_TIER_MAX; i++)
+        for ( MetadataDimension d : MetadataDimension.values() )
         {
-            for ( int e = 0; e < ident; e++ )
-            { 
-                if ( i == 0 && e == (ident - 1)) { p.print(category); continue; }
-                p.print("");
+            int i = 0;
+            for ( MetadataTier tier : MetadataTier.values() )
+            {
+                printResult(p, getCount(filter, d.getID(), i++), total);
             }
-
-            p.print(METADATA_TIER.get(i));
-            for ( String d : METADATA_DIMENSIONS )
-            { 
-                printResult(p, getCount(filter, d, i), total);
-            }
-            p.println();
         }
     }
-
 
     private void printHead(CSVPrinter p) throws IOException
     {
         p.print("tier");
-        for ( String d : METADATA_DIMENSIONS ) { p.print(d); }
+        for ( MetadataDimension d : MetadataDimension.values() )
+        { 
+            p.print(d.getLabel());
+        }
         p.println();
     }
 
@@ -177,5 +208,7 @@ public class TierReportGenerator implements TierEntryConstants
         }
         finally { cli.close(); }
     }
+
+
 }
 

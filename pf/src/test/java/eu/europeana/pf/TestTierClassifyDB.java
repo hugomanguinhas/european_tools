@@ -31,7 +31,7 @@ public class TestTierClassifyDB
             ParallelTierClassifier t = new ParallelTierClassifier(
                 cli, "europeana_production_publish_1", "pf2"
               , Collections.EMPTY_LIST, 10
-              , AlgorithmUtils.getMetadataAlgorithms());
+              , AlgorithmUtils.getMetadataAlgorithmsV2());
     
             //IMAGE
 //            t.classify("/09428/u__orte_99");

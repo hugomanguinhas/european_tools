@@ -3,9 +3,7 @@
  */
 package eu.europeana.pf;
 
-import static eu.europeana.pf2.alg.AlgorithmUtils.METADATA_DIMENSIONS;
-import static eu.europeana.pf2.alg.AlgorithmUtils.METADATA_TIER;
-import static eu.europeana.pf2.alg.AlgorithmUtils.METADATA_TIER_MAX;
+import static eu.europeana.pf2.alg.AlgorithmUtils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +28,6 @@ public class RunGenerateReports
 {
     public static final void main(String[] args) throws IOException
     {
-        Collection<String> datasets = IOUtils.readLines(RunGenerateReports.class.getResourceAsStream("datasets.csv"));
         PrintStream ps = null;
 
         File dir = new File("D:\\work\\incoming\\tiers\\metadata\\testing");
@@ -38,16 +35,8 @@ public class RunGenerateReports
         try
         {
             TierReportGenerator report = new TierReportGenerator(cli, "pf2", "tiers");
-            for ( String ds : datasets)
-            {
-                ps = new PrintStream(new File(dir, ds + ".report.csv"));
-                try
-                {
-                    report.generateForDataset(new CSVPrinter(ps, CSVFormat.EXCEL), ds);
-                }
-                finally { ps.close(); }
-            }
 
+            /*
             ps = new PrintStream(new File(dir, "all.report.csv"));
             try 
             {
@@ -55,13 +44,49 @@ public class RunGenerateReports
             }
             finally { ps.close(); }
 
+            ps = new PrintStream(new File(dir, "country.report.csv"));
+            try 
+            {
+                report.genForAllCountries(new CSVPrinter(ps, CSVFormat.EXCEL));
+            }
+            finally { ps.close(); }
+
+            ps = new PrintStream(new File(dir, "dataset.report.csv"));
+            try 
+            {
+                report.genForAllDatasets(new CSVPrinter(ps, CSVFormat.EXCEL));
+            }
+            finally { ps.close(); }
+
+            ps = new PrintStream(new File(dir, "data.providers.report.csv"));
+            try 
+            {
+                report.genForAllDataProviders(new CSVPrinter(ps, CSVFormat.EXCEL));
+            }
+            finally { ps.close(); }
+
             ps = new PrintStream(new File(dir, "providers.report.csv"));
             try 
             {
-                report.generateForAllProviders(new CSVPrinter(ps, CSVFormat.EXCEL));
+                report.genForAllProviders(new CSVPrinter(ps, CSVFormat.EXCEL));
             }
             finally { ps.close(); }
             
+            ps = new PrintStream(new File(dir, "type.report.csv"));
+            try 
+            {
+                report.genForAllEDMTypes(new CSVPrinter(ps, CSVFormat.EXCEL));
+            }
+            finally { ps.close(); }
+            */
+
+            ps = new PrintStream(new File(dir, "tree.report.csv"));
+            try 
+            {
+                report.genByCategories(new CSVPrinter(ps, CSVFormat.EXCEL)
+                                     , "provider", "dataProvider", "ds");
+            }
+            finally { ps.close(); }
 
             /*
             TierLogGenerator log = new TierLogGenerator(cli, "pf2", "tiers");        

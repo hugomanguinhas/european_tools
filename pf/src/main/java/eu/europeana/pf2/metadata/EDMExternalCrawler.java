@@ -26,6 +26,20 @@ import static eu.europeana.pf2.metadata.MetadataTierConstants.*;
  */
 public class EDMExternalCrawler
 {
+    private boolean _entities;
+    private boolean _webResources;
+    private boolean _aggr;
+
+    public EDMExternalCrawler() { this(true, true, true); }
+
+    public EDMExternalCrawler(boolean entities, boolean webResources
+                            , boolean aggr)
+    {
+        _entities     = entities;
+        _webResources = webResources;
+        _aggr         = aggr;
+    }
+
     public Set<Resource> crawl(Model m)
     {
         return crawl(m, new HashSet());
@@ -34,7 +48,9 @@ public class EDMExternalCrawler
     public Set<Resource> crawl(Model m, Set<Resource> set)
     {
         Resource proxy = getProviderProxy(m);
-        crawlForEntities(proxy, set).add(proxy);
+        set.add(proxy);
+
+        if ( _entities ) { crawlForEntities(proxy, set); }
         crawlAggregation(m, set);
         return set;
     }
@@ -47,7 +63,9 @@ public class EDMExternalCrawler
             while ( iter.hasNext() )
             {
                 Resource aggr = iter.next();
-                set.add(aggr);
+                if ( _aggr ) { set.add(aggr); }
+                //did not consider edm:object because statements on a thumbnail 
+                //do not make sense to count
                 crawlWebResources(aggr, EDM.isShownBy, set);
                 crawlWebResources(aggr, EDM.isShownAt, set);
                 crawlWebResources(aggr, EDM.hasView  , set);
@@ -66,7 +84,8 @@ public class EDMExternalCrawler
             while ( iter.hasNext() )
             {
                 Resource wr = iter.next().getResource();
-                crawlForEntities(wr, set).add(wr);
+                if ( _entities     ) { crawlForEntities(wr, set); }
+                if ( _webResources ) { set.add(wr);               }
             }
         }
         finally { iter.close(); }
