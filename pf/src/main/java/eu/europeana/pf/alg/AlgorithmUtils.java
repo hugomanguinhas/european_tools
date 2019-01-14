@@ -3,9 +3,6 @@
  */
 package eu.europeana.pf.alg;
 
-import java.util.Arrays;
-import java.util.List;
-
 import eu.europeana.pf.metadata.ContextualClassClassifier;
 import eu.europeana.pf.metadata.ContextualClassClassifier2;
 import eu.europeana.pf.metadata.EnablingElementsClassifier;
@@ -18,10 +15,6 @@ import eu.europeana.pf.metadata.LanguageClassifier2;
  */
 public class AlgorithmUtils
 {
-    public static int METADATA_TIER_MAX = 3;
-    public static List<String> METADATA_TIER
-        = Arrays.asList("0", "A", "B", "C");
-
     public static TierClassifierAlgorithm[] getMetadataAlgorithms()
     {
        TierClassifierAlgorithm lang = new LanguageClassifier();
