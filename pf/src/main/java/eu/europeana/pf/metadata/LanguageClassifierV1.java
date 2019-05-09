@@ -9,14 +9,12 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DC;
 import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
 
 import eu.europeana.ld.edm.EDM;
@@ -27,16 +25,8 @@ import static eu.europeana.pf.metadata.MetadataTierConstants.*;
 /**
  * @author Hugo Manguinhas <hugo.manguinhas@europeana.eu>
  * @since 18 Apr 2018
- * 
- * Second version of the language classifier considering only the statements 
- * that are part of the record, aggregation and web resource. 
- * 
- * If statement refers to a reference, then it will count if the 
- * contextual entity is language qualified. A contextual entity is language 
- * qualified only if there is at least one pref label which is language 
- * qualified. Time Spans are simply ignored.
  */
-public class LanguageClassifier2 implements TierClassifierAlgorithm
+public class LanguageClassifierV1 implements TierClassifierAlgorithm
 {
     public static List<Property> RELEVANT_LANGUAGE_PROPERTIES
         = Arrays.asList(
@@ -56,6 +46,7 @@ public class LanguageClassifier2 implements TierClassifierAlgorithm
             DCTerms.alternative,
             DCTerms.conformsTo,
             DCTerms.created,
+            DCTerms.extent,
             DCTerms.hasFormat,
             DCTerms.hasPart,
             DCTerms.hasVersion,
@@ -74,23 +65,38 @@ public class LanguageClassifier2 implements TierClassifierAlgorithm
             DCTerms.spatial,
             DCTerms.tableOfContents,
             DCTerms.temporal,
-            EDM.currentLocation,
-            EDM.hasMet,
             EDM.hasType,
             EDM.isRelatedTo,
             EDM.dataProvider,
             EDM.provider,
             DC.rights,
-            EDM.intermediateProvider
+            EDM.intermediateProvider,
+    
+            //Entities
+            SKOS.prefLabel,
+            SKOS.altLabel,
+            SKOS.note,
+            EDM.begin,
+            EDM.end,
+            FOAF.name,
+            RDAGR2.biographicalInformation,
+            RDAGR2.dateOfBirth,
+            RDAGR2.dateOfDeath,
+            RDAGR2.dateOfEstablishment,
+            RDAGR2.dateOfTermination,
+            RDAGR2.gender,
+            RDAGR2.placeOfBirth,
+            RDAGR2.placeOfDeath,
+            RDAGR2.professionOrOccupation
     );
 
     public static boolean isRelevantProperty(Statement s)
     {
-        return ( RELEVANT_LANGUAGE_PROPERTIES.contains(s.getPredicate()) );
+        return ( RELEVANT_LANGUAGE_PROPERTIES.contains(s.getPredicate()) 
+              && s.getObject().isLiteral() );
     }
 
-    private EDMExternalCrawler _crawler
-        = new EDMExternalCrawler(false, true, true);
+    private EDMExternalCrawler _crawler = new EDMExternalCrawler();
 
     public String getLabel() { return MetadataDimension.LANGUAGE.getID(); }
 
@@ -121,45 +127,11 @@ public class LanguageClassifier2 implements TierClassifierAlgorithm
                 Statement stmt = iter.next();
                 if ( !isRelevantProperty(stmt) ) { continue; }
 
-                RDFNode obj = stmt.getObject();
-                if ( obj.isLiteral() )
-                {
-                    m.count++;
-                    if ( !StringUtils.isEmpty(stmt.getLanguage()) ) { m.match++; }
-                    continue;
-                }
-
-                Resource r2 = obj.asResource();
-                if ( !isAcceptableEntity(r2) ) { continue; }
-
                 m.count++;
-                if ( isLanguageQualified(r2) ) { m.match++; }
+                if ( !StringUtils.isEmpty(stmt.getLanguage()) ) { m.match++; }
             }
         }
         finally { iter.close(); }
-    }
-
-    private boolean isAcceptableEntity(Resource r)
-    {
-        Resource v = r.getPropertyResourceValue(RDF.type);
-        return ((v != null) && (EDM.Agent.equals(v) || EDM.Place.equals(v)
-                            || SKOS.Concept.equals(v)));
-    }
-
-    private boolean isLanguageQualified(Resource r)
-    {
-        StmtIterator iter = r.listProperties(SKOS.prefLabel);
-        try
-        {
-            while ( iter.hasNext() )
-            {
-                Statement stmt = iter.next();
-                if ( !StringUtils.isEmpty(stmt.getLanguage()) ) { return true; }
-            }
-        }
-        finally { iter.close(); }
-
-        return false;
     }
 
     private static class Measure

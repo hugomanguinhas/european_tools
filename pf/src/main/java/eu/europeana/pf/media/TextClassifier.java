@@ -39,6 +39,8 @@ public class TextClassifier extends AbsMediaClassifierAlgorithm
         }
         else
         {
+            // Removed until we get a better understanding for spatial resolution in our data
+            /*
             int res = getSpatialResolution(wr);
             if ( res > 0 ) {
                 if ( res < ImageClassifier.RESOLUTION_S ) { return 0; }
@@ -49,6 +51,8 @@ public class TextClassifier extends AbsMediaClassifierAlgorithm
             {
                 if ( !hasMimetype(wr, "application/pdf") ) { return 0; }
             }
+            */
+            if ( !hasMimetype(wr, "application/pdf") ) { return 0; }
         }
 
         if ( hasReusability(wr, Reusability.OPEN) ) { return 4; }
