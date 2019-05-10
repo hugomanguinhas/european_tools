@@ -90,7 +90,7 @@ public class LanguageClassifierV2 implements TierClassifierAlgorithm
     }
 
     private EDMExternalCrawler _crawler
-        = new EDMExternalCrawler(false, true, true);
+        = new EDMExternalCrawler(false, true, true, true);
 
     public String getLabel() { return MetadataDimension.LANGUAGE.getID(); }
 

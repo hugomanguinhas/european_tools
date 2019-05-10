@@ -24,7 +24,7 @@ import static eu.europeana.pf.metadata.MetadataTierConstants.*;
  * @author Hugo Manguinhas <hugo.manguinhas@europeana.eu>
  * @since 18 Apr 2018
  */
-public class ContextualClassClassifier implements TierClassifierAlgorithm
+public class ContextualClassClassifierV1 implements TierClassifierAlgorithm
 {
     public String getLabel() { return MetadataDimension.CONTEXTUAL.getID(); }
 

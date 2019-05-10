@@ -4,6 +4,7 @@
 package eu.europeana.pf.metadata;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
@@ -24,47 +25,61 @@ import static eu.europeana.pf.metadata.MetadataTierConstants.*;
  * @author Hugo Manguinhas <hugo.manguinhas@europeana.eu>
  * @since 18 Apr 2018
  * 
- * Second version of the measurement for the contextual classes criteria 
- * softening some minimal requirements
+ * 3rd version of the measurement for the contextual classes criteria
+ 
+   - consider only contextual entities that are directly associated to the Proxy 
+     or edm:WebResource (referred from edm:isShownBy and edm:hasView)
+
+   - contextual entities need to comply with minimal requirements
+
+   
+ 
+   Changes:
+
+   - Tier C now mandates that the contextual resources need to be from 2 
+     different classes
  */
-public class ContextualClassClassifier2 implements TierClassifierAlgorithm
+public class ContextualClassClassifierV3 implements TierClassifierAlgorithm
 {
+    private EDMExternalCrawler _crawler
+        = new EDMExternalCrawler(true, false, false, false);
+
     public String getLabel() { return MetadataDimension.CONTEXTUAL.getID(); }
 
     public int getLevels() { return 3; }
 
     public int classify(Model model)
     {
-        Set<Resource> entities = new HashSet();
-
-        Resource proxy = getProviderProxy(model);
-        if ( proxy != null ) { classifyResource(proxy, entities); }
-
-        ResIterator iter = model.listResourcesWithProperty(RDF.type
-                                                         , EDM.WebResource);
-        try
-        {
-            while ( iter.hasNext() ) { classifyResource(iter.next(),entities); }
-        }
-        finally { iter.close(); }
+        Set<Resource> entities = classifyEntities(_crawler.crawl(model));
 
         int ne = entities.size();
-        if ( ne >= 2 ) { return 3; }
-        if ( ne == 1 ) { return 2; }
+        int nc = countClasses(entities);
+
+        if ( ne >= 2 && nc >=2 ) { return 3; }
+        if ( ne >  1           ) { return 2; }
         return 1;
     }
 
-    private void classifyResource(Resource r, Set<Resource> set)
+    private int countClasses(Set<Resource> entities)
     {
-        StmtIterator iter = r.listProperties();
+        Set<Resource> classes = new HashSet();
+        for ( Resource entity : entities )
+        {
+            Resource type = entity.getPropertyResourceValue(RDF.type);
+            if ( type != null ) { classes.add(type); }
+        }
+        return classes.size();
+    }
+
+    private Set<Resource> classifyEntities(Set<Resource> entities)
+    {
+        Iterator<Resource> iter = entities.iterator();
         while ( iter.hasNext() )
         {
-            RDFNode  node = iter.next().getObject();
-            if ( !node.isResource() ) { continue; }
-
-            Resource e = node.asResource();
-            if ( classifyEntity(e) ) { set.add(e); }
+            Resource e = iter.next();
+            if ( !classifyEntity(e) ) { iter.remove(); }
         }
+        return entities;
     }
 
     private boolean classifyEntity(Resource r)

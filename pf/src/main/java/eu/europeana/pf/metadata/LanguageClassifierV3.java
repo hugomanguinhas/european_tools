@@ -82,7 +82,7 @@ public class LanguageClassifierV3 implements TierClassifierAlgorithm
     private Collection<Property> _relevant = new HashSet<Property>();
 
     private EDMExternalCrawler _crawler
-        = new EDMExternalCrawler(false, true, true);
+        = new EDMExternalCrawler(false, true, true, true);
 
     public LanguageClassifierV3(boolean withAgents)
     {

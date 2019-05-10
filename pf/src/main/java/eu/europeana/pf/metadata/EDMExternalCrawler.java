@@ -29,15 +29,17 @@ public class EDMExternalCrawler
     private boolean _entities;
     private boolean _webResources;
     private boolean _aggr;
+    private boolean _proxy;
 
-    public EDMExternalCrawler() { this(true, true, true); }
+    public EDMExternalCrawler() { this(true, true, true, true); }
 
     public EDMExternalCrawler(boolean entities, boolean webResources
-                            , boolean aggr)
+                            , boolean aggr, boolean proxy)
     {
         _entities     = entities;
         _webResources = webResources;
         _aggr         = aggr;
+        _proxy        = proxy;
     }
 
     public Set<Resource> crawl(Model m)
@@ -48,7 +50,7 @@ public class EDMExternalCrawler
     public Set<Resource> crawl(Model m, Set<Resource> set)
     {
         Resource proxy = getProviderProxy(m);
-        set.add(proxy);
+        if ( _proxy    ) { set.add(proxy); }
 
         if ( _entities ) { crawlForEntities(proxy, set); }
         crawlAggregation(m, set);
@@ -67,7 +69,6 @@ public class EDMExternalCrawler
                 //did not consider edm:object because statements on a thumbnail 
                 //do not make sense to count
                 crawlWebResources(aggr, EDM.isShownBy, set);
-                crawlWebResources(aggr, EDM.isShownAt, set);
                 crawlWebResources(aggr, EDM.hasView  , set);
             }
         }
